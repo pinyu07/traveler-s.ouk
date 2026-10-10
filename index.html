@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>日系手帳風旅遊與分帳 App</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Mochiy+Pop+One&family=Zen+Maru+Gothic:wght@400;500;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        picturebook: {
+                            bg: '#FFFDF9',
+                            card: '#FFFFFF',
+                            cream: '#FFF7E6',
+                            matcha: '#859F7A',
+                            sakura: '#E8A5A5',
+                            mustard: '#E0A949',
+                            sky: '#81A3BD',
+                            lightYellow: '#FDF6E2',
+                            lightBlue: '#E6F0F7',
+                            ink: '#4A3E3D',
+                            muted: '#A0938E',
+                            border: '#E8E1D7'
+                        }
+                    },
+                    fontFamily: {
+                        hand: ['"Zen Maru Gothic"', '"Noto Sans TC"', 'sans-serif'],
+                        title: ['"Mochiy Pop One"', '"Zen Maru Gothic"', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #FFFDF9;
+            color: #4A3E3D;
+            font-family: 'Zen Maru Gothic', 'Noto Sans TC', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        .hand-card {
+            border-radius: 18px 14px 20px 16px;
+            border: 2px solid #E8E1D7;
+            box-shadow: 3px 3px 0px #E8E1D7;
+        }
+        .hand-card-sm {
+            border-radius: 14px 12px 15px 11px;
+            border: 2px solid #E8E1D7;
+        }
+        .hand-btn {
+            border-radius: 12px 14px 11px 13px;
+            box-shadow: 2px 2px 0px #4A3E3D;
+            transition: all 0.1s ease;
+        }
+        .hand-btn:active {
+            transform: translate(1px, 1px);
+            box-shadow: 1px 1px 0px #4A3E3D;
+        }
+        .tab-active { 
+            color: #81A3BD; 
+            border-bottom: 3px solid #81A3BD; 
+            font-weight: 700; 
+        }
+    </style>
+</head>
+<body class="max-w-md mx-auto min-h-screen flex flex-col justify-between relative shadow-2xl bg-picturebook-bg">
+
+    <!-- Header Section -->
+    <header class="bg-gradient-to-r from-picturebook-lightYellow via-picturebook-cream to-picturebook-lightBlue text-picturebook-ink p-5 rounded-b-[28px] shadow-sm relative overflow-hidden border-b-2 border-picturebook-border">
+        <div class="flex justify-between items-start relative z-10">
+            <div>
+                <span id="trip-dest-badge" class="bg-white/80 text-picturebook-ink text-xs px-3 py-1 rounded-full font-bold tracking-wide border border-picturebook-border shadow-sm">🇯🇵 東京/日本</span>
+                
+                <div class="flex items-center gap-2 mt-1.5">
+                    <h1 id="trip-title" class="text-2xl font-title text-picturebook-ink">關東秋季自由行 🍁</h1>
+                    <button onclick="openTripTitleEditModal()" class="w-6 h-6 bg-white/80 hover:bg-white text-picturebook-ink rounded-full flex items-center justify-center transition border border-picturebook-border shadow-sm" title="修改標題">
+                        <i class="fa-solid fa-pen text-[10px] text-picturebook-sky"></i>
+                    </button>
+                </div>
+                
+                <p id="trip-dates-text" onclick="openTripDatesEditModal()" class="text-xs text-picturebook-muted mt-1 font-bold cursor-pointer hover:text-picturebook-sky transition inline-block">
+                    <i class="fa-regular fa-calendar-check mr-1 text-picturebook-sky"></i>2026/10/15 - 2026/10/19 (5天) <i class="fa-solid fa-pen-to-square text-[10px] ml-1"></i>
+                </p>
+            </div>
+        </div>
+
+        <!-- Sync Actions Bar -->
+        <div class="mt-3 pt-2.5 border-t border-picturebook-border/60 flex gap-2">
+            <button onclick="shareTripUrl()" class="flex-1 bg-picturebook-matcha text-white text-xs py-1.5 hand-btn font-bold">
+                <i class="fa-solid fa-share-nodes mr-1"></i>產生完整共用網址
+            </button>
+        </div>
+
+        <!-- Weather & Currency Mini Bar -->
+        <div class="mt-3 pt-2 border-t border-picturebook-border/60 flex justify-between items-center text-xs">
+            <div class="flex items-center gap-2 cursor-pointer bg-white/60 px-2.5 py-1 rounded-xl border border-picturebook-border/40 shadow-sm" onclick="openWeatherModal()">
+                <span id="weather-icon-display" class="text-xl">☀️</span>
+                <div>
+                    <div id="weather-temp-display" class="font-bold text-picturebook-ink">22°C - 26°C</div>
+                    <div id="weather-wear-display" class="text-picturebook-muted text-[10px]">薄外套 / 舒適穿搭</div>
+                </div>
+            </div>
+            <div class="flex items-center gap-2 cursor-pointer bg-white/60 px-2.5 py-1 rounded-xl border border-picturebook-border/40 shadow-sm" onclick="openFxModal()">
+                <span class="text-lg">💴</span>
+                <div class="text-right">
+                    <div class="font-bold text-picturebook-ink">1 <span id="fx-code-display">JPY</span> = <span id="fx-rate-display">0.210</span> TWD</div>
+                    <div class="text-picturebook-muted text-[10px]">即時連線 🪙</div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Date / Day Selector Slider -->
+    <div class="px-4 mt-3">
+        <div id="day-slider" class="flex gap-2 overflow-x-auto hide-scrollbar py-1"></div>
+    </div>
+
+    <!-- Main Content Container -->
+    <main class="flex-1 px-4 py-2 pb-24 overflow-y-auto">
+
+        <!-- TAB 1: ITINERARY -->
+        <div id="tab-itinerary" class="tab-content space-y-3">
+            <div class="flex justify-between items-center px-1 pt-1">
+                <h2 class="font-bold text-picturebook-ink text-sm"><i class="fa-solid fa-list-ul text-picturebook-sky mr-1.5"></i>行程時間軸</h2>
+                <button onclick="openAddItemModal()" class="text-xs bg-picturebook-sky text-white px-3.5 py-2 hand-btn font-bold">
+                    ✏️ 新增行程
+                </button>
+            </div>
+
+            <div class="relative pl-8 pt-3 space-y-4">
+                <div class="absolute left-[15px] top-4 bottom-4 w-0 border-l-2 border-dashed border-picturebook-muted/50 z-0"></div>
+                <div id="timeline-list" class="space-y-4 relative z-10"></div>
+            </div>
+        </div>
+
+        <!-- TAB 2: SPOTS & MAPS -->
+        <div id="tab-spots" class="tab-content hidden space-y-3">
+            <div class="flex justify-between items-center mb-1">
+                <h2 class="font-bold text-picturebook-ink text-sm"><i class="fa-solid fa-map-location-dot text-picturebook-mustard mr-1.5"></i>景點地圖</h2>
+                <button onclick="openAddSpotModal()" class="text-xs bg-picturebook-mustard text-white px-3 py-1.5 hand-btn font-bold">+ 新增景點</button>
+            </div>
+            <div id="spots-list" class="grid grid-cols-2 gap-2.5"></div>
+        </div>
+
+        <!-- TAB 3: EXPENSES & SELF-CALCULATOR -->
+        <div id="tab-expenses" class="tab-content hidden space-y-3">
+            
+            <div class="bg-picturebook-cream p-4 hand-card space-y-3">
+                <div class="flex justify-between items-center">
+                    <span class="text-xs font-bold text-picturebook-ink"><i class="fa-solid fa-calculator text-picturebook-sakura mr-1.5"></i>自訂分帳計算機</span>
+                    <span class="text-[10px] text-picturebook-muted">即時算平分金額</span>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="text-[10px] font-bold text-picturebook-muted block mb-1">消費總金額 (<span class="calc-currency">JPY</span>)：</label>
+                        <input id="calc-amount" type="number" placeholder="例如: 6000" oninput="runSelfCalc()" class="w-full text-xs p-2 rounded-xl border border-picturebook-border focus:outline-none bg-white font-bold text-picturebook-ink">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold text-picturebook-muted block mb-1">平分人數：</label>
+                        <input id="calc-people" type="number" value="3" min="1" oninput="runSelfCalc()" class="w-full text-xs p-2 rounded-xl border border-picturebook-border focus:outline-none bg-white font-bold text-picturebook-ink">
+                    </div>
+                </div>
+
+                <div class="bg-white p-3 rounded-xl border border-picturebook-border flex justify-between items-center">
+                    <div>
+                        <div class="text-[10px] text-picturebook-muted font-bold">每人應付金額：</div>
+                        <div id="calc-result-foreign" class="text-sm font-bold text-picturebook-sakura">0 JPY</div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-[10px] text-picturebook-muted font-bold">折合台幣約：</div>
+                        <div id="calc-result-twd" class="text-sm font-bold text-picturebook-matcha">NT$ 0</div>
+                    </div>
+                </div>
+
+                <button onclick="addCalcResultToExpenses()" class="w-full bg-picturebook-sakura text-white text-xs py-2 hand-btn font-bold">
+                    ➕ 將計算結果帶入消費筆記
+                </button>
+            </div>
+
+            <div class="bg-picturebook-card p-3.5 hand-card">
+                <div class="flex justify-between items-center mb-2">
+                    <span class="text-xs font-bold text-picturebook-ink"><i class="fa-solid fa-user-group text-picturebook-sakura mr-1.5"></i>旅途好夥伴</span>
+                    <button onclick="manageCompanions()" class="text-[11px] text-picturebook-sakura font-bold underline">編輯夥伴</button>
+                </div>
+                <div id="companions-chips" class="flex flex-wrap gap-1.5 text-xs"></div>
+            </div>
+
+            <!-- Settlement Result Card -->
+            <div class="bg-picturebook-card hand-card p-4">
+                <div class="flex justify-between items-center mb-2.5">
+                    <span class="text-xs font-bold text-picturebook-ink"><i class="fa-solid fa-scale-balanced text-picturebook-sky mr-1.5"></i>全團結算與兩兩對帳清單</span>
+                    <button onclick="calculateSettlement()" class="text-[11px] bg-picturebook-sky text-white px-2.5 py-1 hand-btn font-bold">重新計算</button>
+                </div>
+                
+                <div id="settlement-breakdown" class="text-xs space-y-1.5 mb-3 pb-2.5 border-b border-picturebook-border text-picturebook-ink"></div>
+                <div id="settlement-actions" class="text-xs space-y-2 font-bold"></div>
+            </div>
+
+            <div class="flex justify-between items-center pt-1">
+                <h3 class="text-xs font-bold text-picturebook-ink">📝 消費明細筆記</h3>
+                <button onclick="openAddExpenseModal()" class="bg-picturebook-sakura text-white text-xs px-3 py-1.5 hand-btn font-bold">+ 手動記一筆</button>
+            </div>
+
+            <div id="expenses-list" class="space-y-2.5"></div>
+        </div>
+
+        <!-- TAB 4: CHECKLIST -->
+        <div id="tab-checklist" class="tab-content hidden space-y-3">
+            <div class="bg-picturebook-card p-3.5 hand-card">
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="text-xs font-bold text-picturebook-ink"><i class="fa-solid fa-square-check text-picturebook-matcha mr-1.5"></i>出發打包檢查表</h3>
+                    <button onclick="addChecklistItem()" class="text-xs bg-picturebook-matcha text-white px-3 py-1.5 hand-btn font-bold">+ 新增物品</button>
+                </div>
+                <div id="checklist-items" class="space-y-2 text-xs"></div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Modal: Add Itinerary -->
+    <div id="modal-add-item" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-picturebook-card w-full max-w-sm p-4 hand-card space-y-3">
+            <div class="flex justify-between items-center border-b border-picturebook-border pb-2">
+                <h3 class="font-bold text-sm text-picturebook-ink">✏️ 新增行程與交通</h3>
+                <button onclick="closeAddItemModal()" class="text-picturebook-muted text-lg">✕</button>
+            </div>
+
+            <div>
+                <label class="text-[11px] font-bold text-picturebook-muted block mb-1">選擇圖示類別：</label>
+                <div id="category-selector" class="grid grid-cols-4 gap-2 text-xs"></div>
+            </div>
+
+            <div>
+                <label class="text-[11px] font-bold text-picturebook-muted block mb-1">行程標題：</label>
+                <input id="input-item-title" type="text" placeholder="例如: 淺草寺散策" class="w-full text-xs p-2 rounded-xl border border-picturebook-border focus:outline-none">
+            </div>
+
+            <div class="flex gap-2">
+                <div class="w-1/2">
+                    <label class="text-[11px] font-bold text-picturebook-muted block mb-1">選擇時間（可滑動滾輪）：</label>
+                    <input id="input-item-time" type="time" value="10:00" class="w-full text-xs p-2 rounded-xl border border-picturebook-border focus:outline-none bg-white font-bold">
+                </div>
+                <div class="w-1/2">
+                    <label class="text-[11px] font-bold text-picturebook-muted block mb-1">預估移動時間：</label>
+                    <input id="input-item-transit-time" type="text" placeholder="例如: 30分鐘" class="w-full text-xs p-2 rounded-xl border border-picturebook-border focus:outline-none">
+                </div>
+            </div>
+
+            <div class="flex gap-2">
+                <div class="w-1/2">
+                    <label class="text-[11px] font-bold text-picturebook-muted block mb-1">移動方式：</label>
+                    <select id="input-item-transit-mode" class="w-full text-xs p-2 rounded-xl border border-picturebook-border focus:outline-none bg-white">
+                        <option value="步行 🚶">步行 🚶</option>
+                        <option value="地鐵 🚇">地鐵 🚇</option>
+                        <option value="公車 🚌">公車 🚌</option>
+                        <option value="計程車 🚕">計程車 🚕</option>
+                        <option value="開車 🚗">開車 🚗</option>
+                        <option value="其他 🚄">其他 🚄</option>
+                    </select>
+                </div>
+                <div class="w-1/2">
+                    <label class="text-[11px] font-bold text-picturebook-muted block mb-1">備註：</label>
+                    <input id="input-item-note" type="text" placeholder="備註或注意事項" class="w-full text-xs p-2 rounded-xl border border-picturebook-border focus:outline-none">
+                </div>
+            </div>
+
+            <button onclick="saveNewItineraryItem()" class="w-full bg-picturebook-sky text-white py-2 hand-btn font-bold text-xs mt-2">確認新增</button>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation Bar -->
+    <nav class="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-picturebook-card border-t-2 border-picturebook-border flex justify-around py-2.5 px-2 z-30 shadow-lg rounded-t-[20px]">
+        <button onclick="switchTab('itinerary')" id="nav-itinerary" class="flex flex-col items-center text-picturebook-sky tab-active">
+            <i class="fa-solid fa-book-open text-lg"></i>
+            <span class="text-[10px] mt-0.5 font-bold">行程</span>
+        </button>
+        <button onclick="switchTab('spots')" id="nav-spots" class="flex flex-col items-center text-picturebook-muted">
+            <i class="fa-solid fa-compass text-lg"></i>
+            <span class="text-[10px] mt-0.5 font-bold">景點</span>
+        </button>
+        <button onclick="switchTab('expenses')" id="nav-expenses" class="flex flex-col items-center text-picturebook-muted">
+            <i class="fa-solid fa-coins text-lg"></i>
+            <span class="text-[10px] mt-0.5 font-bold">記帳分帳</span>
+        </button>
+        <button onclick="switchTab('checklist')" id="nav-checklist" class="flex flex-col items-center text-picturebook-muted">
+            <i class="fa-solid fa-list-check text-lg"></i>
+            <span class="text-[10px] mt-0.5 font-bold">準備清單</span>
+        </button>
+    </nav>
+
+    <script>
+        const CATEGORIES = [
+            { name: "美食", icon: "🍱", bg: "bg-picturebook-sakura/20 text-picturebook-sakura" },
+            { name: "觀光", icon: "⛩️", bg: "bg-picturebook-mustard/20 text-picturebook-mustard" },
+            { name: "交通", icon: "🚃", bg: "bg-picturebook-sky/20 text-picturebook-sky" },
+            { name: "購物", icon: "🛍️", bg: "bg-picturebook-sakura/20 text-picturebook-sakura" },
+            { name: "咖啡", icon: "☕", bg: "bg-picturebook-mustard/20 text-picturebook-mustard" },
+            { name: "住宿", icon: "🏨", bg: "bg-picturebook-matcha/20 text-picturebook-matcha" },
+            { name: "拍照", icon: "📸", bg: "bg-picturebook-sky/20 text-picturebook-sky" },
+            { name: "其他", icon: "🎈", bg: "bg-picturebook-cream text-picturebook-ink" }
+        ];
+
+        let selectedCategory = CATEGORIES[0];
+
+        let appData = {
+            title: "關東秋季自由行 🍁",
+            destination: "東京/日本",
+            startDate: "2026-10-15",
+            totalDays: 5,
+            fxCode: "JPY",
+            fxRate: 0.210,
+            weather: { icon: "☀️", minTemp: 22, maxTemp: 26, wear: "薄外套 / 舒適穿搭" },
+            companions: ["我", "夥伴A", "夥伴B"],
+            selectedDay: 1,
+            itinerary: [
+                { id: 1, day: 1, time: "09:00", title: "抵達羽田機場", icon: "🚃", tag: "交通", tagBg: "bg-picturebook-sky/20 text-picturebook-sky", transitTime: "45分鐘", transitMode: "地鐵 🚇", note: "搭乘單軌電車前往市區飯店寄放行李", completed: false, mapUrl: "https://maps.google.com" },
+                { id: 2, day: 1, time: "12:30", title: "淺草神社 & 敘敘苑燒肉", icon: "🍱", tag: "美食", tagBg: "bg-picturebook-sakura/20 text-picturebook-sakura", transitTime: "15分鐘", transitMode: "步行 🚶", note: "預約 12:30 享用商業午餐", completed: false, mapUrl: "https://maps.google.com" }
+            ],
+            spots: [
+                { id: 1, name: "SHIBUYA SKY", desc: "預約傍晚夕陽場次看夜景", mapUrl: "https://maps.google.com" },
+                { id: 2, name: "豪德寺 (招福貓)", desc: "搭乘世田谷線拍滿滿招財貓", mapUrl: "https://maps.google.com" }
+            ],
+            expenses: [
+                { id: 1, title: "景點門票聯票", amount: 12000, payer: "夥伴A", sharedBy: ["我", "夥伴A", "夥伴B"] },
+                { id: 2, title: "深夜計程車", amount: 3000, payer: "夥伴A", sharedBy: ["夥伴A", "夥伴B"] },
+                { id: 3, title: "居酒屋美味晚餐", amount: 6000, payer: "我", sharedBy: ["我", "夥伴A", "夥伴B"] }
+            ],
+            checklist: [
+                { id: 1, text: "護照與簽證文件", checked: true },
+                { id: 2, text: "日幣現金與信用卡", checked: true },
+                { id: 3, text: "網卡 / Wi-Fi 分享器", checked: false }
+            ]
+        };
+
+        window.addEventListener('DOMContentLoaded', () => {
+            loadSharedUrlData();
+            loadLocalData();
+            renderHeader();
+            renderDaysSlider();
+            renderItinerary();
+            renderSpots();
+            renderCompanions();
+            renderExpenses();
+            renderChecklist();
+            calculateSettlement();
+            renderCategorySelector();
+            runSelfCalc();
+
+            setTimeout(() => {
+                fetchLiveExchangeRate();
+                fetchLiveWeather();
+            }, 200);
+        });
+
+        function saveData() { localStorage.setItem('picturebook_travel_app_v8', JSON.stringify(appData)); }
+        function loadLocalData() {
+            const saved = localStorage.getItem('picturebook_travel_app_v8');
+            if (saved) { try { appData = JSON.parse(saved); } catch (e) {} }
+        }
+
+        // 💡 自動從網址載入共用資料
+        function loadSharedUrlData() {
+            const hash = window.location.hash;
+            if (hash && hash.startsWith('#data=')) {
+                try {
+                    const jsonStr = decodeURIComponent(atob(hash.replace('#data=', '')));
+                    const parsedData = JSON.parse(jsonStr);
+                    if (parsedData && parsedData.title) {
+                        appData = parsedData;
+                        saveData();
+                        alert('✨ 成功透過共用網址載入最新行程與帳目！');
+                        window.history.replaceState(null, null, window.location.pathname);
+                    }
+                } catch (e) {
+                    console.log('解析共用網址失敗');
+                }
+            }
+        }
+
+        // 💡 一鍵產生帶有所有資料的完整網址
+        function shareTripUrl() {
+            try {
+                const jsonStr = JSON.stringify(appData);
+                const base64Data = btoa(encodeURIComponent(jsonStr));
+                const shareUrl = `${window.location.origin}${window.location.pathname}#data=${base64Data}`;
+                
+                navigator.clipboard.writeText(shareUrl).then(() => {
+                    alert('🔗 完整共用網址已複製！\n\n直接貼到 LINE 傳給朋友，朋友點開網址就會自動同步所有最新內容囉！');
+                }).catch(() => {
+                    prompt('請複製下方網址傳給朋友：', shareUrl);
+                });
+            } catch (e) {
+                alert('資料過大，無法產生網址');
+            }
+        }
+
+        async function fetchLiveExchangeRate() {
+            try {
+                const response = await fetch('https://api.exchangerate-api.com/v4/latest/JPY');
+                const data = await response.json();
+                if (data && data.rates && data.rates.TWD) {
+                    appData.fxRate = data.rates.TWD;
+                    saveData();
+                    renderHeader();
+                    renderExpenses();
+                    calculateSettlement();
+                    runSelfCalc();
+                }
+            } catch (error) {
+                console.log("使用本地備用匯率");
+            }
+        }
+
+        async function fetchLiveWeather(lat = 35.6762, lon = 139.6503) {
+            try {
+                const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`;
+                const response = await fetch(url);
+                const data = await response.json();
+                if (data && data.current_weather) {
+                    const temp = Math.round(data.current_weather.temperature);
+                    appData.weather.minTemp = temp - 3;
+                    appData.weather.maxTemp = temp + 3;
+                    appData.weather.icon = getWeatherEmoji(data.current_weather.weathercode);
+                    saveData();
+                    renderHeader();
+                }
+            } catch (error) {
+                console.log("使用本地備用天氣");
+            }
+        }
+
+        function getWeatherEmoji(code) {
+            if (code === 0) return "☀️";
+            if (code >= 1 && code <= 3) return "⛅";
+            if (code >= 45 && code <= 48) return "🌫️";
+            if (code >= 51 && code <= 67) return "🌧️";
+            if (code >= 71 && code <= 77) return "❄️";
+            if (code >= 80) return "🌦️";
+            return "☀️";
+        }
+
+        function renderHeader() {
+            document.getElementById('trip-title').innerText = appData.title;
+            document.getElementById('trip-dest-badge').innerText = `🇯🇵 ${appData.destination}`;
+            document.getElementById('fx-code-display').innerText = appData.fxCode;
+            document.getElementById('fx-rate-display').innerText = appData.fxRate.toFixed(3);
+            document.getElementById('weather-icon-display').innerText = appData.weather.icon;
+            document.getElementById('weather-temp-display').innerText = `${appData.weather.minTemp}°C - ${appData.weather.maxTemp}°C`;
+            document.getElementById('weather-wear-display').innerText = appData.weather.wear;
+
+            document.querySelectorAll('.calc-currency').forEach(el => el.innerText = appData.fxCode);
+
+            const start = new Date(appData.startDate);
+            const end = new Date(start);
+            end.setDate(start.getDate() + (appData.totalDays - 1));
+            document.getElementById('trip-dates-text').innerHTML = `<i class="fa-regular fa-calendar-check mr-1 text-picturebook-sky"></i>${start.getFullYear()}/${start.getMonth()+1}/${start.getDate()} - ${end.getFullYear()}/${end.getMonth()+1}/${end.getDate()} (${appData.totalDays}天) <i class="fa-solid fa-pen-to-square text-[10px] ml-1 opacity-70"></i>`;
+        }
+
+        function runSelfCalc() {
+            const amt = parseFloat(document.getElementById('calc-amount').value) || 0;
+            const ppl = parseInt(document.getElementById('calc-people').value) || 1;
+            const perPersonForeign = amt / Math.max(1, ppl);
+            const perPersonTwd = perPersonForeign * appData.fxRate;
+
+            document.getElementById('calc-result-foreign').innerText = `${Math.round(perPersonForeign).toLocaleString()} ${appData.fxCode}`;
+            document.getElementById('calc-result-twd').innerText = `NT$ ${Math.round(perPersonTwd).toLocaleString()}`;
+        }
+
+        function addCalcResultToExpenses() {
+            const amt = parseFloat(document.getElementById('calc-amount').value);
+            if (!amt || amt <= 0) { alert('請先輸入有效的消費金額'); return; }
+
+            const title = prompt('請輸入品項名稱 (例如: 午餐餐廳):', '自訂分帳品項');
+            if (!title) return;
+
+            const payer = prompt(`誰先掏錢墊付？ (${appData.companions.join('/')}):`, appData.companions[0]) || appData.companions[0];
+            const sharersInput = prompt(`誰要平分這筆錢？(用逗號分開):`, appData.companions.join(','));
+            const sharedBy = sharersInput ? sharersInput.split(',').map(s => s.trim()) : [...appData.companions];
+
+            appData.expenses.push({ id: Date.now(), title, amount: amt, payer, sharedBy });
+            saveData();
+            renderExpenses();
+            calculateSettlement();
+
+            document.getElementById('calc-amount').value = '';
+            runSelfCalc();
+            alert('已成功加入消費筆記！');
+        }
+
+        function renderDaysSlider() {
+            const slider = document.getElementById('day-slider');
+            slider.innerHTML = '';
+            for (let i = 1; i <= appData.totalDays; i++) {
+                const dayDate = new Date(appData.startDate);
+                dayDate.setDate(dayDate.getDate() + (i - 1));
+                const dateStr = `${dayDate.getMonth()+1}/${dayDate.getDate()}`;
+                const isActive = appData.selectedDay === i;
+
+                const btn = document.createElement('button');
+                btn.className = `flex-shrink-0 px-3.5 py-1.5 hand-card-sm text-center transition ${isActive ? 'bg-picturebook-sky text-white font-bold border-picturebook-sky shadow-sm' : 'bg-picturebook-card text-picturebook-ink'}`;
+                btn.onclick = () => { appData.selectedDay = i; renderDaysSlider(); renderItinerary(); };
+                btn.innerHTML = `<div class="text-[10px] ${isActive ? 'text-white/90' : 'text-picturebook-muted'} font-medium">Day ${i}</div><div class="text-xs font-bold">${dateStr}</div>`;
+                slider.appendChild(btn);
+            }
+        }
+
+        function renderItinerary() {
+            const list = document.getElementById('timeline-list');
+            list.innerHTML = '';
+            const dayItems = appData.itinerary.filter(item => item.day === appData.selectedDay);
+
+            dayItems.forEach(item => {
+                const transitHtml = item.transitTime ? `<div class="text-[10px] text-picturebook-muted mt-1 bg-picturebook-bg px-2 py-0.5 rounded-md inline-block border border-picturebook-border"><i class="fa-solid fa-route mr-1 text-picturebook-mustard"></i>移動: ${item.transitMode || ''} (${item.transitTime})</div>` : '';
+
+                const card = document.createElement('div');
+                card.className = "relative flex items-start gap-3 group";
+                card.innerHTML = `
+                    <div class="absolute -left-[30px] top-1 w-7 h-7 bg-picturebook-card border-2 border-picturebook-border rounded-full flex items-center justify-center text-xs shadow-sm z-20">
+                        ${item.icon || '📌'}
+                    </div>
+                    <div class="bg-picturebook-card p-3.5 hand-card flex-1 flex items-start gap-3 relative transition ${item.completed ? 'opacity-60 bg-picturebook-cream/50' : ''}">
+                        <button onclick="toggleItemComplete(${item.id})" class="mt-0.5 text-xl text-picturebook-mustard">
+                            <i class="${item.completed ? 'fa-solid fa-heart text-picturebook-sakura' : 'fa-regular fa-heart text-picturebook-muted'}"></i>
+                        </button>
+                        <div class="flex-1">
+                            <div class="flex justify-between items-center">
+                                <span class="text-xs font-bold text-picturebook-mustard"><i class="fa-regular fa-clock mr-1"></i>${item.time}</span>
+                                <span class="text-[10px] ${item.tagBg || 'bg-picturebook-cream text-picturebook-ink'} px-2.5 py-0.5 rounded-full font-bold">${item.tag || '行程'}</span>
+                            </div>
+                            <h4 class="text-sm font-bold text-picturebook-ink mt-0.5 ${item.completed ? 'line-through text-picturebook-muted' : ''}">${item.title}</h4>
+                            <p class="text-xs text-picturebook-muted mt-1">${item.note}</p>
+                            ${transitHtml}
+                        </div>
+                        <a href="${item.mapUrl || 'https://maps.google.com'}" target="_blank" class="text-picturebook-sky p-1 text-base"><i class="fa-solid fa-location-dot"></i></a>
+                        <button onclick="deleteItineraryItem(${item.id})" class="text-picturebook-muted hover:text-picturebook-sakura text-xs p-1"><i class="fa-solid fa-trash-can"></i></button>
+                    </div>
+                `;
+                list.appendChild(card);
+            });
+
+            if (dayItems.length === 0) list.innerHTML = `<div class="text-center py-8 text-xs text-picturebook-muted">今天還沒有安排行程～點擊上方「✏️ 新增行程」開始規劃！</div>`;
+        }
+
+        function toggleItemComplete(id) {
+            const item = appData.itinerary.find(i => i.id === id);
+            if (item) { item.completed = !item.completed; saveData(); renderItinerary(); }
+        }
+
+        function deleteItineraryItem(id) {
+            appData.itinerary = appData.itinerary.filter(i => i.id !== id);
+            saveData(); renderItinerary();
+        }
+
+        function renderCategorySelector() {
+            const container = document.getElementById('category-selector');
+            container.innerHTML = '';
+            CATEGORIES.forEach(cat => {
+                const btn = document.createElement('button');
+                const isSel = selectedCategory.name === cat.name;
+                btn.className = `p-2 rounded-xl border flex flex-col items-center gap-1 transition ${isSel ? 'bg-picturebook-sky text-white border-picturebook-sky font-bold' : 'bg-picturebook-card border-picturebook-border text-picturebook-ink'}`;
+                btn.onclick = () => { selectedCategory = cat; renderCategorySelector(); };
+                btn.innerHTML = `<span class="text-lg">${cat.icon}</span><span class="text-[10px]">${cat.name}</span>`;
+                container.appendChild(btn);
+            });
+        }
+
+        function openAddItemModal() {
+            document.getElementById('modal-add-item').classList.remove('hidden');
+        }
+
+        function closeAddItemModal() {
+            document.getElementById('modal-add-item').classList.add('hidden');
+        }
+
+        function saveNewItineraryItem() {
+            const title = document.getElementById('input-item-title').value.trim();
+            if (!title) { alert('請輸入標題'); return; }
+            const time = document.getElementById('input-item-time').value.trim() || '10:00';
+            const transitTime = document.getElementById('input-item-transit-time').value.trim();
+            const transitMode = document.getElementById('input-item-transit-mode').value;
+            const note = document.getElementById('input-item-note').value.trim() || '';
+
+            appData.itinerary.push({
+                id: Date.now(),
+                day: appData.selectedDay,
+                time,
+                title,
+                icon: selectedCategory.icon,
+                tag: selectedCategory.name,
+                tagBg: selectedCategory.bg,
+                transitTime,
+                transitMode,
+                note,
+                completed: false,
+                mapUrl: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(title)}`
+            });
+
+            saveData();
+            renderItinerary();
+            closeAddItemModal();
+            document.getElementById('input-item-title').value = '';
+            document.getElementById('input-item-transit-time').value = '';
+            document.getElementById('input-item-note').value = '';
+        }
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`tab-${tabName}`).classList.remove('hidden');
+            document.querySelectorAll('nav button').forEach(btn => { btn.classList.remove('text-picturebook-sky', 'tab-active'); btn.classList.add('text-picturebook-muted'); });
+            const activeNav = document.getElementById(`nav-${tabName}`);
+            activeNav.classList.remove('text-picturebook-muted'); activeNav.classList.add('text-picturebook-sky', 'tab-active');
+        }
+
+        function renderSpots() {
+            const list = document.getElementById('spots-list');
+            list.innerHTML = '';
+            appData.spots.forEach(spot => {
+                const card = document.createElement('div');
+                card.className = "bg-picturebook-card p-3.5 hand-card flex flex-col justify-between";
+                card.innerHTML = `<div><h4 class="text-xs font-bold text-picturebook-ink">${spot.name}</h4><p class="text-[11px] text-picturebook-muted mt-1">${spot.desc}</p></div>
+                <div class="mt-3 flex justify-between items-center border-t border-picturebook-border pt-2"><a href="${spot.mapUrl}" target="_blank" class="text-[11px] text-picturebook-mustard font-bold"><i class="fa-solid fa-map-pin mr-1"></i>導航</a><button onclick="deleteSpot(${spot.id})" class="text-[11px] text-picturebook-muted hover:text-picturebook-sakura"><i class="fa-solid fa-trash-can"></i></button></div>`;
+                list.appendChild(card);
+            });
+        }
+
+        function openAddSpotModal() {
+            const name = prompt("景點名稱:");
+            if (!name) return;
+            const desc = prompt("筆記:", "") || "";
+            appData.spots.push({ id: Date.now(), name, desc, mapUrl: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(name)}` });
+            saveData(); renderSpots();
+        }
+
+        function deleteSpot(id) { appData.spots = appData.spots.filter(s => s.id !== id); saveData(); renderSpots(); }
+
+        function renderCompanions() {
+            const container = document.getElementById('companions-chips');
+            container.innerHTML = '';
+            appData.companions.forEach(c => {
+                const chip = document.createElement('span');
+                chip.className = "bg-picturebook-sakura/15 text-picturebook-sakura px-2.5 py-1 rounded-full border border-picturebook-sakura/30 font-bold";
+                chip.innerText = c;
+                container.appendChild(chip);
+            });
+            document.getElementById('calc-people').value = appData.companions.length || 1;
+            runSelfCalc();
+        }
+
+        function manageCompanions() {
+            const input = prompt("請輸入同行成員，用逗號分開:", appData.companions.join(', '));
+            if (input) {
+                appData.companions = input.split(',').map(s => s.trim()).filter(s => s.length > 0);
+                saveData(); renderCompanions(); calculateSettlement();
+            }
+        }
+
+        function renderExpenses() {
+            const list = document.getElementById('expenses-list');
+            list.innerHTML = '';
+            appData.expenses.forEach(item => {
+                const twd = Math.round(item.amount * appData.fxRate);
+                const card = document.createElement('div');
+                card.className = "bg-picturebook-card p-3.5 hand-card flex justify-between items-center";
+                card.innerHTML = `
+                    <div class="flex-1">
+                        <div class="text-xs font-bold text-picturebook-ink">${item.title}</div>
+                        <div class="text-[10px] text-picturebook-muted mt-0.5"><span class="text-picturebook-sakura font-bold">${item.payer}</span> 掏錢 ｜ 平分: ${item.sharedBy.join(', ')}</div>
+                    </div>
+                    <div class="text-right mr-3">
+                        <div class="text-xs font-bold text-picturebook-ink">${item.amount.toLocaleString()} ${appData.fxCode}</div>
+                        <div class="text-[10px] text-picturebook-muted">≈ NT$ ${twd.toLocaleString()}</div>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <button onclick="editExpense(${item.id})" class="text-picturebook-sky hover:text-picturebook-ink text-xs p-1" title="修改"><i class="fa-solid fa-pen"></i></button>
+                        <button onclick="deleteExpense(${item.id})" class="text-picturebook-muted hover:text-picturebook-sakura text-xs p-1" title="刪除"><i class="fa-solid fa-trash-can"></i></button>
+                    </div>
+                `;
+                list.appendChild(card);
+            });
+        }
+
+        function openAddExpenseModal() {
+            const title = prompt("品項名稱 (例如: 居酒屋晚餐):");
+            if (!title) return;
+            const amount = parseFloat(prompt(`金額 (${appData.fxCode}):`, "3000"));
+            if (isNaN(amount)) return;
+            const payer = prompt(`誰先掏錢墊付？ (${appData.companions.join('/')}):`, appData.companions[0]) || appData.companions[0];
+            const sharersInput = prompt(`誰要平分這筆錢？(用逗號分開):`, appData.companions.join(','));
+            const sharedBy = sharersInput ? sharersInput.split(',').map(s => s.trim()) : [...appData.companions];
+
+            appData.expenses.push({ id: Date.now(), title, amount, payer, sharedBy });
+            saveData(); renderExpenses(); calculateSettlement();
+        }
+
+        function editExpense(id) {
+            const item = appData.expenses.find(e => e.id === id);
+            if (!item) return;
+
+            const title = prompt("修改品項名稱:", item.title);
+            if (!title) return;
+            const amount = parseFloat(prompt(`修改金額 (${appData.fxCode}):`, item.amount));
+            if (isNaN(amount)) return;
+            const payer = prompt(`誰先掏錢墊付？ (${appData.companions.join('/')}):`, item.payer) || item.payer;
+            const sharersInput = prompt(`誰要平分這筆錢？(用逗號分開):`, item.sharedBy.join(','));
+            const sharedBy = sharersInput ? sharersInput.split(',').map(s => s.trim()) : [...appData.companions];
+
+            item.title = title;
+            item.amount = amount;
+            item.payer = payer;
+            item.sharedBy = sharedBy;
+
+            saveData();
+            renderExpenses();
+            calculateSettlement();
+        }
+
+        function deleteExpense(id) {
+            appData.expenses = appData.expenses.filter(e => e.id !== id);
+            saveData();
+            renderExpenses();
+            calculateSettlement();
+        }
+
+        function calculateSettlement() {
+            const bdContainer = document.getElementById('settlement-breakdown');
+            const actContainer = document.getElementById('settlement-actions');
+            bdContainer.innerHTML = ''; actContainer.innerHTML = '';
+
+            if (appData.expenses.length === 0) {
+                bdContainer.innerHTML = `<div class="text-picturebook-muted">目前尚未記錄任何支出</div>`;
+                return;
+            }
+
+            let totalSpentTWD = 0;
+            let paidMap = {};
+            let oweMap = {};
+            let persons = appData.companions;
+
+            let pairwise = {};
+            persons.forEach(p1 => {
+                paidMap[p1] = 0;
+                oweMap[p1] = 0;
+                pairwise[p1] = {};
+                persons.forEach(p2 => {
+                    if (p1 !== p2) pairwise[p1][p2] = 0;
+                });
+            });
+
+            appData.expenses.forEach(exp => {
+                const twd = exp.amount * appData.fxRate;
+                totalSpentTWD += twd;
+
+                if (paidMap[exp.payer] !== undefined) paidMap[exp.payer] += twd;
+
+                const validSharers = exp.sharedBy.filter(s => persons.includes(s));
+                const shareCount = validSharers.length || 1;
+                const perPersonShare = twd / shareCount;
+
+                validSharers.forEach(sharer => {
+                    if (oweMap[sharer] !== undefined) oweMap[sharer] += perPersonShare;
+                    if (sharer !== exp.payer && pairwise[sharer] && pairwise[sharer][exp.payer] !== undefined) {
+                        pairwise[sharer][exp.payer] += perPersonShare;
+                    }
+                });
+            });
+
+            bdContainer.innerHTML = `<div class="flex justify-between font-bold border-b border-picturebook-border pb-1.5 mb-2"><span>全團總支出:</span><span class="text-picturebook-sakura font-bold">NT$ ${Math.round(totalSpentTWD).toLocaleString()}</span></div>`;
+            
+            persons.forEach(person => {
+                const paid = paidMap[person] || 0;
+                const owe = oweMap[person] || 0;
+                const net = paid - owe;
+
+                const row = document.createElement('div');
+                row.className = "flex justify-between items-center text-[11px] mb-1";
+                row.innerHTML = `<span><strong>${person}</strong> (已墊: NT$ ${Math.round(paid)} / 應付: NT$ ${Math.round(owe)})</span>
+                <span class="${net >= 0 ? 'text-picturebook-matcha font-bold' : 'text-picturebook-sakura font-bold'}">${net >= 0 ? '淨收 +' : '淨付 '}${Math.round(net)}</span>`;
+                bdContainer.appendChild(row);
+            });
+
+            let netPairs = [];
+            let checkedPairs = new Set();
+
+            persons.forEach(p1 => {
+                persons.forEach(p2 => {
+                    if (p1 !== p2 && !checkedPairs.has(`${p2}-${p1}`)) {
+                        checkedPairs.add(`${p1}-${p2}`);
+                        let p1_owes_p2 = pairwise[p1][p2] || 0;
+                        let p2_owes_p1 = pairwise[p2][p1] || 0;
+
+                        let diff = p1_owes_p2 - p2_owes_p1;
+                        if (diff > 1) {
+                            netPairs.push({ debtor: p1, creditor: p2, amount: diff });
+                        } else if (diff < -1) {
+                            netPairs.push({ debtor: p2, creditor: p1, amount: Math.abs(diff) });
+                        }
+                    }
+                });
+            });
+
+            actContainer.innerHTML = `<div class="text-[11px] font-bold text-picturebook-ink mb-1 mt-2">🤝 直接轉帳對帳清單：</div>`;
+
+            if (netPairs.length === 0) {
+                actContainer.innerHTML += `<div class="text-picturebook-matcha font-bold mt-1">✨ 大家帳目剛好平衡，無須互相轉帳！</div>`;
+            } else {
+                netPairs.forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = "bg-white p-2.5 rounded-xl border border-picturebook-border flex items-center justify-between text-picturebook-ink shadow-sm mb-1.5";
+                    div.innerHTML = `
+                        <span>💳 <strong class="text-picturebook-sakura">${item.debtor}</strong> 應付給 <strong class="text-picturebook-sky">${item.creditor}</strong></span>
+                        <span class="text-picturebook-sakura font-bold">NT$ ${Math.round(item.amount).toLocaleString()}</span>
+                    `;
+                    actContainer.appendChild(div);
+                });
+            }
+        }
+
+        function renderChecklist() {
+            const container = document.getElementById('checklist-items');
+            container.innerHTML = '';
+            appData.checklist.forEach(item => {
+                const row = document.createElement('div');
+                row.className = "flex items-center justify-between p-2 rounded-xl bg-picturebook-cream/60 border border-picturebook-border";
+                row.innerHTML = `
+                    <label class="flex items-center gap-2 cursor-pointer flex-1">
+                        <input type="checkbox" ${item.checked ? 'checked' : ''} onchange="toggleChecklist(${item.id})" class="rounded text-picturebook-matcha">
+                        <span class="${item.checked ? 'line-through text-picturebook-muted' : 'text-picturebook-ink'} font-bold">${item.text}</span>
+                    </label>
+                    <button onclick="deleteChecklist(${item.id})" class="text-picturebook-muted hover:text-picturebook-sakura text-xs px-1"><i class="fa-solid fa-xmark"></i></button>
+                `;
+                container.appendChild(row);
+            });
+        }
+
+        function toggleChecklist(id) {
+            const item = appData.checklist.find(i => i.id === id);
+            if (item) { item.checked = !item.checked; saveData(); renderChecklist(); }
+        }
+
+        function addChecklistItem() {
+            const text = prompt("請輸入準備項目:");
+            if (text) { appData.checklist.pop ? appData.checklist.push({ id: Date.now(), text, checked: false }) : (appData.checklist = [{ id: Date.now(), text, checked: false }]); saveData(); renderChecklist(); }
+        }
+
+        function deleteChecklist(id) {
+            appData.checklist = appData.checklist.filter(i => i.id !== id);
+            saveData(); renderChecklist();
+        }
+
+        function openTripTitleEditModal() {
+            const title = prompt("旅程名稱:", appData.title); 
+            if (title !== null && title.trim() !== "") appData.title = title.trim();
+            
+            const dest = prompt("目的地標籤 (例如: 東京/日本):", appData.destination); 
+            if (dest !== null && dest.trim() !== "") appData.destination = dest.trim();
+            
+            saveData(); 
+            renderHeader();
+        }
+
+        function openTripDatesEditModal() {
+            const startDate = prompt("開始日期 (格式 YYYY-MM-DD):", appData.startDate); 
+            if (startDate !== null && startDate.trim() !== "") appData.startDate = startDate.trim();
+            
+            , days = parseInt(prompt("總天數:", appData.totalDays)); 
+            if (!isNaN(days) && days > 0) appData.totalDays = days;
+            
+            saveData(); 
+            renderHeader(); 
+            renderDaysSlider(); 
+            renderItinerary();
+        }
+
+        function openFxModal() {
+            const code = prompt("外幣代碼 (例如 JPY/USD):", appData.fxCode); if (code) appData.fxCode = code.toUpperCase();
+            const rate = prompt(`換算成台幣匯率 (1 ${appData.fxCode} = ? TWD):`, appData.fxRate);
+            if (rate !== null && !isNaN(parseFloat(rate))) {
+                appData.fxRate = parseFloat(rate);
+                saveData(); renderHeader(); renderExpenses(); calculateSettlement(); runSelfCalc();
+            }
+        }
+
+        function openWeatherModal() {
+            const icon = prompt("天氣圖示 (☀️/🌧️/⛅/❄️):", appData.weather.icon); if (icon) appData.weather.icon = icon;
+            const min = parseInt(prompt("最低溫 (°C):", appData.weather.minTemp)); if (!isNaN(min)) appData.weather.minTemp = min;
+            const max = parseInt(prompt("最高溫 (°C):", appData.weather.maxTemp)); if (!isNaN(max)) appData.weather.maxTemp = max;
+            const wear = prompt("建議穿搭:", appData.weather.wear); if (wear) appData.weather.wear = wear;
+            saveData(); renderHeader();
+        }
+    </script>
+</body>
+</html>
