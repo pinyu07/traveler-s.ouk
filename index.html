@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>日系手帳風旅遊與分帳 App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Mochiy+Pop+One&family=Zen+Maru+Gothic:wght@400;500;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        picturebook: {
+                            bg: '#FFFDF9', card: '#FFFFFF', cream: '#FFF7E6', matcha: '#859F7A',
+                            sakura: '#E8A5A5', mustard: '#E0A949', sky: '#81A3BD',
+                            lightYellow: '#FDF6E2', lightBlue: '#E6F0F7', ink: '#4A3E3D',
+                            muted: '#A0938E', border: '#E8E1D7'
+                        }
+                    },
+                    fontFamily: { hand: ['"Zen Maru Gothic"', 'sans-serif'], title: ['"Mochiy Pop One"', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #FFFDF9; color: #4A3E3D; font-family: 'Zen Maru Gothic', sans-serif; -webkit-tap-highlight-color: transparent; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .hand-card { border-radius: 18px 14px 20px 16px; border: 2px solid #E8E1D7; box-shadow: 3px 3px 0px #E8E1D7; }
+        .hand-card-sm { border-radius: 14px 12px 15px 11px; border: 2px solid #E8E1D7; }
+        .hand-btn { border-radius: 12px 14px 11px 13px; box-shadow: 2px 2px 0px #4A3E3D; transition: all 0.1s ease; cursor: pointer; }
+        .hand-btn:active { transform: translate(1px, 1px); box-shadow: 1px 1px 0px #4A3E3D; }
+        .tab-active { color: #81A3BD; border-bottom: 3px solid #81A3BD; font-weight: 700; }
+    </style>
+</head>
+<body class="max-w-md mx-auto min-h-screen flex flex-col justify-between relative shadow-2xl bg-picturebook-bg">
+
+    <!-- Header -->
+    <header class="bg-gradient-to-r from-picturebook-lightYellow via-picturebook-cream to-picturebook-lightBlue text-picturebook-ink p-5 rounded-b-[28px] shadow-sm relative overflow-hidden border-b-2 border-picturebook-border">
+        <div class="flex justify-between items-start relative z-10">
+            <div class="w-full">
+                <div class="flex items-center justify-between">
+                    <span id="trip-dest-badge" class="bg-white/80 text-picturebook-ink text-xs px-3 py-1 rounded-full font-bold border border-picturebook-border shadow-sm cursor-pointer hover:bg-white" title="點擊編輯目的地">🇯🇵 東京/日本</span>
+                    <div class="flex gap-1.5">
+                        <button id="btn-edit-title" class="text-[11px] bg-white text-picturebook-sky px-2.5 py-1 hand-btn font-bold border border-picturebook-border flex items-center gap-1">
+                            <i class="fa-solid fa-pen"></i> 更改標題
+                        </button>
+                        <button id="btn-share" class="text-[10px] bg-picturebook-matcha text-white px-2.5 py-1 hand-btn font-bold">
+                            <i class="fa-solid fa-share-nodes mr-1"></i>分享
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="mt-2">
+                    <h1 id="trip-title" class="text-2xl font-title text-picturebook-ink">關東秋季自由行 🍁</h1>
+                </div>
+                
+                <p id="trip-dates-text" class="text-xs text-picturebook-muted mt-1 font-bold cursor-pointer hover:text-picturebook-sky transition inline-block">
+                    <i class="fa-regular fa-calendar-check mr-1 text-picturebook-sky"></i>2026/10/15 - 2026/10/19 (5天) <i class="fa-solid fa-pen-to-square text-[10px] ml-1"></i>
+                </p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2 mt-4 pt-3 border-t border
